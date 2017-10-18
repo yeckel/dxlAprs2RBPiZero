@@ -3,11 +3,12 @@
 
 AprsFrameDecoder::AprsFrameDecoder(QObject* parent): QObject(parent)
 {
-    in.setDevice(&tcpSocket);
-    in.setVersion(QDataStream::Qt_4_0);
-    tcpSocket.connectToHost("127.0.0.1", 14580);
+    reconnectTimer.setSingleShot(true);
+    reconnectTimer.setInterval(1000);
     connect(&tcpSocket, &QTcpSocket::readyRead, this, &AprsFrameDecoder::readPendingDatagrams);
     connect(&tcpSocket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(displayError(QAbstractSocket::SocketError)));
+    connect(&reconnectTimer, &QTimer::timeout, this, &AprsFrameDecoder::connectToudpGate);
+    connectToudpGate();
 }
 
 QString AprsFrameDecoder::sondeId() const
@@ -118,15 +119,22 @@ void AprsFrameDecoder::displayError(QAbstractSocket::SocketError socketError)
     case QAbstractSocket::RemoteHostClosedError:
         break;
     case QAbstractSocket::HostNotFoundError:
-        qFatal("The host was not found. Please check the host name and port settings.");
+        qWarning() << "The host was not found. Please check the host name and port settings.";
         break;
     case QAbstractSocket::ConnectionRefusedError:
-        qFatal("The connection was refused by the peer. "
-               "Make sure the fortune server is running, "
-               "and check that the host name and port "
-               "settings are correct.");
+        qWarning() << "The connection was refused by the peer. "
+                   "Make sure the fortune server is running, "
+                   "and check that the host name and port "
+                   "settings are correct.";
         break;
     default:
-        qFatal(qPrintable(QString("The following error occurred: %1.").arg(tcpSocket.errorString())));
+        qWarning() << QString("The following error occurred: %1.").arg(tcpSocket.errorString());
     }
+    reconnectTimer.start();
+}
+
+void AprsFrameDecoder::connectToudpGate()
+{
+    tcpSocket.abort();
+    tcpSocket.connectToHost("127.0.0.1", 14580);
 }

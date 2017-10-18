@@ -4,6 +4,7 @@
 #include <QDataStream>
 #include <QObject>
 #include <QTcpSocket>
+#include <QTimer>
 
 class AprsFrameDecoder: public QObject
 {
@@ -36,10 +37,11 @@ public slots:
     void setAltitude(double altitude);
     void setClimbingRate(double climbingRate);
     void displayError(QAbstractSocket::SocketError socketError);
+    void connectToudpGate();
 
 private:
+    QTimer reconnectTimer{this};
     QTcpSocket tcpSocket{this};
-    QDataStream in;
     QString m_sondeId;
     QString m_latitude;
     QString m_longitude;
