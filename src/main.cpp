@@ -7,6 +7,8 @@
 int main(int argc, char* argv[])
 {
     QCoreApplication a(argc, argv);
+    QCoreApplication::setOrganizationDomain("tomsik.eu");
+    QCoreApplication::setApplicationName("DxlAprsStarter");
     Server server{&a};
     DecoderProcess decoderProcess{&a};
     QCoreApplication::connect(&server, &Server::startReceiving, &decoderProcess, &DecoderProcess::startDecoding);

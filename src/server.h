@@ -2,6 +2,7 @@
 #define SERVER_H
 
 #include <QObject>
+#include <QSettings>
 #include <QUdpSocket>
 
 class Server : public QObject
@@ -9,7 +10,7 @@ class Server : public QObject
     Q_OBJECT
 public:
     explicit Server(QObject* parent = nullptr);
-
+    static constexpr int CONTROL_PORT = 7755;
 signals:
     void startReceiving();
     void stopReceiving();
@@ -18,6 +19,7 @@ public slots:
     void readPendingDatagrams();
 private:
     QUdpSocket udpSocket{this};
+    QSettings settings{this};
 };
 
 #endif // SERVER_H

@@ -5,6 +5,7 @@
 #include <QObject>
 #include <QTcpSocket>
 #include <QTimer>
+#include <qsettings.h>
 
 class AprsFrameDecoder: public QObject
 {
@@ -21,7 +22,8 @@ public:
     QString  longitude() const;
     double altitude() const;
     double climbingRate() const;
-
+    static constexpr int UDP_GATE_PORT = 14580;
+    static constexpr const char* UDP_GATE_IP = "127.0.0.1";
 signals:
     void sondeIdChanged(QString sondeId);
     void latitudeChanged(QString latitude);
@@ -40,6 +42,7 @@ public slots:
     void connectToudpGate();
 
 private:
+    QSettings settings{this};
     QTimer reconnectTimer{this};
     QTcpSocket tcpSocket{this};
     QString m_sondeId;

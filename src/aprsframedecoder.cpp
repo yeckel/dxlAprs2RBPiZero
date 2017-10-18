@@ -136,5 +136,5 @@ void AprsFrameDecoder::displayError(QAbstractSocket::SocketError socketError)
 void AprsFrameDecoder::connectToudpGate()
 {
     tcpSocket.abort();
-    tcpSocket.connectToHost("127.0.0.1", 14580);
+    tcpSocket.connectToHost(settings.value("UdpGateIP", UDP_GATE_IP).toString(), settings.value("UdpGatePort", UDP_GATE_PORT).toInt());
 }

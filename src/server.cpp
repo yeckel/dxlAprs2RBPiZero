@@ -2,7 +2,7 @@
 
 Server::Server(QObject* parent) : QObject(parent)
 {
-    udpSocket.bind(QHostAddress::Any, 7755);
+    udpSocket.bind(QHostAddress::Any, settings.value("ControlPort", CONTROL_PORT).toInt());
     connect(&udpSocket, &QUdpSocket::readyRead, this, &Server::readPendingDatagrams);
 }
 
