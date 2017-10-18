@@ -1,8 +1,9 @@
 #ifndef APRSFRAMEDECODER_H
 #define APRSFRAMEDECODER_H
 
+#include <QDataStream>
 #include <QObject>
-#include <QUdpSocket>
+#include <QTcpSocket>
 
 class AprsFrameDecoder: public QObject
 {
@@ -34,9 +35,11 @@ public slots:
     void setLongitude(QString longitude);
     void setAltitude(double altitude);
     void setClimbingRate(double climbingRate);
+    void displayError(QAbstractSocket::SocketError socketError);
 
 private:
-    QUdpSocket udpSocket{this};
+    QTcpSocket tcpSocket{this};
+    QDataStream in;
     QString m_sondeId;
     QString m_latitude;
     QString m_longitude;

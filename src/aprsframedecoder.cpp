@@ -3,8 +3,11 @@
 
 AprsFrameDecoder::AprsFrameDecoder(QObject* parent): QObject(parent)
 {
-    udpSocket.bind(QHostAddress::LocalHost, 4010);
-    connect(&udpSocket, &QUdpSocket::readyRead, this, &AprsFrameDecoder::readPendingDatagrams);
+    in.setDevice(&tcpSocket);
+    in.setVersion(QDataStream::Qt_4_0);
+    tcpSocket.connectToHost("127.0.0.1", 14580);
+    connect(&tcpSocket, &QTcpSocket::readyRead, this, &AprsFrameDecoder::readPendingDatagrams);
+    connect(&tcpSocket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(displayError(QAbstractSocket::SocketError)));
 }
 
 QString AprsFrameDecoder::sondeId() const
@@ -34,33 +37,23 @@ double AprsFrameDecoder::climbingRate() const
 
 void AprsFrameDecoder::readPendingDatagrams()
 {
-    QByteArray datagram;
-    do
-    {
-        datagram.resize(udpSocket.pendingDatagramSize());
-        udpSocket.readDatagram(datagram.data(), datagram.size());
-    }
-    while(udpSocket.hasPendingDatagrams());
+    QByteArray localReadAll = tcpSocket.readAll();
+    QString datagram(localReadAll);
 
     qDebug() << "Read:" << datagram;
-    QList<QByteArray> localSplit = datagram.split(';');
-    if(localSplit.size() != 2)
-    {
-        return;
-    }
-    QString readableData = QString(localSplit[1]);
-    QRegExp rx("(\\D\\d+)\\s\\*(\\d+)h(.*)N\\/(.*)E.*A=(\\d+).*Clb=(.+)m\\/s");
+    QString readableData = QString(datagram);
+    QRegExp rx(":;(.+)\\s\\*(\\d+)h(\\d+.\\d+\\w)\\/(\\d+.\\d+\\w)O(\\d{3})\\/(\\d{3})\\/A=(\\d{6})!.+Clb=(.+)m\\/s");
     rx.indexIn(readableData);
     QStringList split = rx.capturedTexts();
-    if(split.size() != 7)
+    if(split.size() != 9)
     {
         qWarning() << split;
     }
     setSondeId(split[1]);
     setLatitude(split[3]);
     setLongitude(split[4]);
-    setAltitude(QString(split[5]).toInt());
-    setClimbingRate(QString(split[6]).toDouble());
+    setAltitude(QString(split[7]).toInt());
+    setClimbingRate(QString(split[8]).toDouble());
 }
 
 void AprsFrameDecoder::setSondeId(QString sondeId)
@@ -116,4 +109,24 @@ void AprsFrameDecoder::setClimbingRate(double climbingRate)
 
     m_climbingRate = climbingRate;
     emit climbingRateChanged(m_climbingRate);
+}
+
+void AprsFrameDecoder::displayError(QAbstractSocket::SocketError socketError)
+{
+    switch(socketError)
+    {
+    case QAbstractSocket::RemoteHostClosedError:
+        break;
+    case QAbstractSocket::HostNotFoundError:
+        qFatal("The host was not found. Please check the host name and port settings.");
+        break;
+    case QAbstractSocket::ConnectionRefusedError:
+        qFatal("The connection was refused by the peer. "
+               "Make sure the fortune server is running, "
+               "and check that the host name and port "
+               "settings are correct.");
+        break;
+    default:
+        qFatal(qPrintable(QString("The following error occurred: %1.").arg(tcpSocket.errorString())));
+    }
 }
