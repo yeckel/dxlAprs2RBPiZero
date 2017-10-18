@@ -1,4 +1,5 @@
 #include "decoderprocess.h"
+#include <QFile>
 #include <QLoggingCategory>
 
 DecoderProcess::DecoderProcess(QObject* parent) : QObject(parent)
@@ -15,6 +16,7 @@ DecoderProcess::DecoderProcess(QObject* parent) : QObject(parent)
 
 void DecoderProcess::startDecoding()
 {
+    createSdrtstConfig();
     qDebug() << "Start rtlTcp";
     rtlTcp.start();
     qDebug() << "rtlTcpStarted:" << rtlTcp.waitForStarted(5000);
@@ -40,6 +42,29 @@ void DecoderProcess::stopDecoding()
     QProcess::execute("killall", QStringList("sdrtst"));
     QProcess::execute("killall", QStringList("sondeudp"));
     QProcess::execute("killall", QStringList("sondemod"));
+}
+
+void DecoderProcess::createSdrtstConfig()
+{
+    qDebug() << "Creating new config file with frequency:" << rxFrequency;
+    QFile file("/tmp/receiver.cfg");
+    if(!file.open(QIODevice::WriteOnly | QIODevice::Text))
+    {
+        qWarning() << "Unable to open /tmp/receiver.cfg for writing";
+        return;
+    }
+
+    QTextStream out(&file);
+    out << "p 5 " << settings.value("RTL_PPM", 0).toString() << "\n";
+    out << "p 8 1\n";
+    out << "f " << rxFrequency << "  10 0 60\n";
+    file.close();
+}
+
+void DecoderProcess::onNewFrequency(double mHz)
+{
+    this->rxFrequency = mHz;
+    createSdrtstConfig();
 }
 
 void DecoderProcess::onErrorOccured(QProcess::ProcessError error)

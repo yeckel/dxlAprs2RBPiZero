@@ -13,6 +13,7 @@ int main(int argc, char* argv[])
     DecoderProcess decoderProcess{&a};
     QCoreApplication::connect(&server, &Server::startReceiving, &decoderProcess, &DecoderProcess::startDecoding);
     QCoreApplication::connect(&server, &Server::stopReceiving, &decoderProcess, &DecoderProcess::stopDecoding);
+    QCoreApplication::connect(&server, &Server::newFreq, &decoderProcess, &DecoderProcess::onNewFrequency);
     AprsFrameDecoder aprsFrameDecoder{&a};
     DisplayHandler displayHandler{&a};
     QCoreApplication::connect(&aprsFrameDecoder, &AprsFrameDecoder::sondeIdChanged, &displayHandler, &DisplayHandler::onSondeNameChanged);
