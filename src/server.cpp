@@ -1,4 +1,6 @@
 #include "server.h"
+#include  <time.h>
+#include <QTime>
 
 Server::Server(QObject* parent) : QObject(parent)
 {
@@ -43,6 +45,23 @@ void Server::readPendingDatagrams()
     if(datagram.startsWith("Stop"))
     {
         emit stopReceiving();
+        return;
+    }
+    if(datagram.startsWith("Time"))
+    {
+        QList<QByteArray> localSplit = datagram.split(':');
+        if(localSplit.size() != 2)
+        {
+            qWarning() << "Wrong command size:" << localSplit.size();
+            return;
+        }
+        bool ok;
+        long int timeS = localSplit[1].trimmed().toLong(&ok);
+        if(!ok)
+        {
+            qWarning() << "Could not parse time:" << timeS;
+        }
+        stime(&timeS);
         return;
     }
 }
