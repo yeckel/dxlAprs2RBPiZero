@@ -53,7 +53,7 @@ void AprsFrameDecoder::readPendingDatagrams()
     setSondeId(split[1]);
     setLatitude(split[3]);
     setLongitude(split[4]);
-    setAltitude(QString(split[7]).toInt());
+    setAltitude(QString(split[7]).toInt() / FT2M);
     setClimbingRate(QString(split[8]).toDouble());
 }
 

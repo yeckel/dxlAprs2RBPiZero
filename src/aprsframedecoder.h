@@ -15,6 +15,7 @@ class AprsFrameDecoder: public QObject
     Q_PROPERTY(QString longitude READ longitude WRITE setLongitude NOTIFY longitudeChanged)
     Q_PROPERTY(double altitude READ altitude WRITE setAltitude NOTIFY altitudeChanged)
     Q_PROPERTY(double climbingRate READ climbingRate WRITE setClimbingRate NOTIFY climbingRateChanged)
+    static constexpr double FT2M = 0.3058;
 public:
     explicit AprsFrameDecoder(QObject* parent = nullptr);
     QString sondeId() const;
